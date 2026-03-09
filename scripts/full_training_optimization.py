@@ -19,6 +19,7 @@ from core.brain_architecture import BrainArchitecture, BrainConfig
 
 print("=" * 70)
 print("类人脑双系统AI架构 - 完整训练优化")
+print("基础模型: Qwen3.5-0.8B-Base")
 print("=" * 70)
 
 # ==================== 训练数据 ====================
