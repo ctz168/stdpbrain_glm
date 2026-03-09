@@ -1,51 +1,69 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# dependencies
-node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# 虚拟环境
+venv/
+ENV/
+env/
+.venv/
 
-# testing
-/coverage
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
-# next.js
-/.next/
-/out/
+# 模型文件 (太大不上传)
+models/
+*.bin
+*.safetensors
+*.gguf
+*.pth
+*.pt
 
-# production
-/build
+# 日志
+logs/
+*.log
 
-# misc
+# 环境变量
+.env
+.env.local
+
+# 系统文件
 .DS_Store
-*.pem
+Thumbs.db
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+# 测试
+.pytest_cache/
+.coverage
+htmlcov/
 
-# env files (can opt-in for committing if needed)
-.env*
+# Node.js (如果有前端)
+node_modules/
+.next/
+out/
 
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-local-*
-.claude
-.z-ai-config
-dev.log
-test
-prompt
-
-server.log
-# Skills directory
-/skills/
+# 临时文件
+*.tmp
+*.temp
+.cache/

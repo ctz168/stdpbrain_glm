@@ -1,0 +1,37 @@
+# 类人脑双系统AI架构 - Python依赖
+# Brain Architecture Python Dependencies
+
+# 核心依赖
+torch>=2.0.0
+transformers>=4.35.0
+accelerate>=0.24.0
+sentencepiece>=0.1.99
+safetensors>=0.4.0
+
+# API服务
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+websockets>=12.0
+
+# Telegram Bot
+python-telegram-bot>=20.7
+aiohttp>=3.9.0
+
+# 数据处理
+numpy>=1.24.0
+pandas>=2.0.0
+pydantic>=2.5.0
+
+# 工具库
+python-dotenv>=1.0.0
+requests>=2.31.0
+tqdm>=4.66.0
+colorama>=0.4.6
+
+# 可选：量化支持
+# bitsandbytes>=0.41.0
+# auto-gptq>=0.6.0
+
+# 可选：GPU加速
+# nvidia-ml-py3>=7.352.0
