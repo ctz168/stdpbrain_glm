@@ -410,10 +410,17 @@ class BrainArchitecture:
         
         try:
             print("\n[1/3] 加载模型...")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.config.model_path, trust_remote_code=True)
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.config.model_path, 
+                trust_remote_code=True,
+                local_files_only=True
+            )
             self.model = AutoModelForCausalLM.from_pretrained(
-                self.config.model_path, trust_remote_code=True,
-                torch_dtype=self.config.dtype, low_cpu_mem_usage=True
+                self.config.model_path, 
+                trust_remote_code=True,
+                torch_dtype=self.config.dtype, 
+                low_cpu_mem_usage=True,
+                local_files_only=True
             )
             self.model.eval()
             print("✓ 模型加载成功")
