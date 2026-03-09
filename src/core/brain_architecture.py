@@ -287,14 +287,9 @@ class InferenceEngine:
         self.is_running = False
     
     def _build_context(self, user_input: str) -> str:
-        """构建上下文"""
-        context_parts = []
-        for msg in self.conversation_history[-self.config.narrow_window_size:]:
-            context_parts.append(f"用户: {msg['user']}")
-            context_parts.append(f"助手: {msg['assistant']}")
-        context_parts.append(f"用户: {user_input}")
-        context_parts.append("助手:")
-        return "\n".join(context_parts)
+        """构建上下文 - 简化版本，避免模型幻觉"""
+        # 只使用当前输入，不使用历史上下文（避免幻觉）
+        return f"用户: {user_input}\n助手:"
     
     def infer(self, user_input: str) -> Tuple[str, Dict]:
         """执行推理"""
@@ -312,15 +307,15 @@ class InferenceEngine:
             outputs = self.model.generate(
                 inputs['input_ids'],
                 attention_mask=inputs['attention_mask'],
-                max_new_tokens=min(self.config.max_new_tokens, 128),  # 限制最大长度
-                temperature=max(self.config.temperature, 0.5),  # 确保温度合理
-                top_p=self.config.top_p,
+                max_new_tokens=64,  # 减少到64，避免幻觉
+                temperature=0.8,
+                top_p=0.9,
+                top_k=50,
                 do_sample=True,
                 pad_token_id=self.tokenizer.eos_token_id,
                 eos_token_id=self.tokenizer.eos_token_id,
-                repetition_penalty=1.3,  # 重复惩罚
-                no_repeat_ngram_size=3,  # 防止3-gram重复
-                early_stopping=True,
+                repetition_penalty=1.5,  # 增加重复惩罚
+                no_repeat_ngram_size=2,  # 更严格的ngram限制
             )
         
         generated_ids = outputs[0][inputs['input_ids'].shape[1]:]
@@ -349,33 +344,28 @@ class InferenceEngine:
     
     def _clean_output(self, text: str) -> str:
         """清理输出，移除重复和多余内容"""
-        # 分行处理
+        # 只取第一行作为回复（避免模型编造后续对话）
         lines = text.strip().split('\n')
-        cleaned = []
-        prev = ""
-        repeat_count = 0
         
+        # 找到第一个完整回复
+        result_lines = []
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-            # 检测重复
-            if line == prev or (prev and line.startswith(prev[:10])):
-                repeat_count += 1
-                if repeat_count >= 2:
-                    continue
-            else:
-                repeat_count = 0
-            # 停止条件：遇到新的用户输入
-            if line.startswith("用户:"):
+            # 遇到新的用户输入就停止
+            if line.startswith("用户:") or line.startswith("user:"):
                 break
-            cleaned.append(line)
-            prev = line
+            result_lines.append(line)
+            # 只保留第一个回复段落
+            if len(result_lines) >= 3:  # 最多3行
+                break
         
-        result = '\n'.join(cleaned)
-        # 只保留第一个完整回复
-        if "用户:" in result:
-            result = result.split("用户:")[0].strip()
+        result = '\n'.join(result_lines)
+        
+        # 如果输出太长，截断
+        if len(result) > 500:
+            result = result[:500] + "..."
         
         return result
     
