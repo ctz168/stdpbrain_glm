@@ -307,29 +307,27 @@ class InferenceEngine:
         context = self._build_context(user_input)
         inputs = self.tokenizer(context, return_tensors='pt', truncation=True, max_length=512)
         
-        generation_config = GenerationConfig(
-            max_new_tokens=self.config.max_new_tokens,
-            temperature=self.config.temperature,
-            top_p=self.config.top_p,
-            do_sample=True,
-            pad_token_id=self.tokenizer.eos_token_id,
-        )
-        
+        # 优化的生成配置 - 添加重复惩罚和停止条件
         with torch.no_grad():
             outputs = self.model.generate(
                 inputs['input_ids'],
-                generation_config=generation_config,
-                output_hidden_states=True,
-                return_dict_in_generate=True
+                attention_mask=inputs['attention_mask'],
+                max_new_tokens=min(self.config.max_new_tokens, 128),  # 限制最大长度
+                temperature=max(self.config.temperature, 0.5),  # 确保温度合理
+                top_p=self.config.top_p,
+                do_sample=True,
+                pad_token_id=self.tokenizer.eos_token_id,
+                eos_token_id=self.tokenizer.eos_token_id,
+                repetition_penalty=1.3,  # 重复惩罚
+                no_repeat_ngram_size=3,  # 防止3-gram重复
+                early_stopping=True,
             )
         
-        generated_ids = outputs.sequences[0][inputs['input_ids'].shape[1]:]
+        generated_ids = outputs[0][inputs['input_ids'].shape[1]:]
         generated_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
         
-        # 存储到海马体
-        if outputs.hidden_states:
-            last_hidden = outputs.hidden_states[-1][0].mean(dim=0)
-            self.hippocampus.store(last_hidden.unsqueeze(0), f"用户: {user_input}\n助手: {generated_text[:100]}")
+        # 清理重复内容
+        generated_text = self._clean_output(generated_text)
         
         # 更新历史
         self.conversation_history.append({"user": user_input, "assistant": generated_text})
@@ -348,6 +346,38 @@ class InferenceEngine:
         }
         
         return generated_text, metadata
+    
+    def _clean_output(self, text: str) -> str:
+        """清理输出，移除重复和多余内容"""
+        # 分行处理
+        lines = text.strip().split('\n')
+        cleaned = []
+        prev = ""
+        repeat_count = 0
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            # 检测重复
+            if line == prev or (prev and line.startswith(prev[:10])):
+                repeat_count += 1
+                if repeat_count >= 2:
+                    continue
+            else:
+                repeat_count = 0
+            # 停止条件：遇到新的用户输入
+            if line.startswith("用户:"):
+                break
+            cleaned.append(line)
+            prev = line
+        
+        result = '\n'.join(cleaned)
+        # 只保留第一个完整回复
+        if "用户:" in result:
+            result = result.split("用户:")[0].strip()
+        
+        return result
     
     def train_step(self, user_input: str, expected_output: str, optimizer) -> Tuple[float, Dict]:
         """执行一步训练"""
