@@ -1,0 +1,616 @@
+{
+  "timestamp": "2026-03-10 02:27:23",
+  "overall_score": 0.625,
+  "dimensions": {
+    "数学计算": {
+      "dimension": "数学计算",
+      "average_score": 0.77,
+      "case_count": 5,
+      "scores": [
+        0.6,
+        0.5,
+        0.75,
+        1.0,
+        1.0
+      ],
+      "details": [
+        {
+          "case_id": 1,
+          "input": "3月12日起租，3月份20天房租1600元。押金2400元，卫生费200元。离租卫生干净退200元卫生费。合计2600元。月租金是多少？",
+          "output": "根据您提供的信息，计算月租金如下：\n\n1.  **月租金**：1600元  \n2.  **押金**：2400元  \n3.  **卫生费**：200元  \n4.  **合计**：2600元  \n\n**说明**：您提供的“合计2600元”已经包含了押金、卫生费和可能存在的其他费用（如水电费、物业费、电视费等）。因此，月租金（即您要求计算的金额）为 **1600元**。\n\n**总结**：您需要支付的月租",
+          "expected_keywords": [
+            "80",
+            "月租",
+            "租金",
+            "1600",
+            "20天"
+          ],
+          "matched_keywords": [
+            "月租",
+            "租金",
+            "1600"
+          ],
+          "score": 0.6,
+          "reasoning": "20天房租1600元，月租金 = 1600 / 20 * 30 = 2400元，或者按天算 1600/20=80元/天",
+          "metadata": {
+            "cycle_time_ms": 11814.151525497437,
+            "tokens_generated": 137
+          }
+        },
+        {
+          "case_id": 2,
+          "input": "计算: 15 * 7 + 32 = ?",
+          "output": "计算：15 × 7 + 32\n\n第一步：计算乘法  \n15 × 7 = 105\n\n第二步：加法  \n105 + 32 = 137\n\n所以答案是：**137**",
+          "expected_keywords": [
+            "137",
+            "一百三十七"
+          ],
+          "matched_keywords": [
+            "137"
+          ],
+          "score": 0.5,
+          "reasoning": "15 * 7 = 105, 105 + 32 = 137",
+          "metadata": {
+            "cycle_time_ms": 4561.379671096802,
+            "tokens_generated": 55
+          }
+        },
+        {
+          "case_id": 3,
+          "input": "一个长方形，长8米，宽5米，求面积和周长",
+          "output": "一个长方形的长是8米，宽是5米，我们可以计算它的面积和周长。\n\n**1. 计算面积**  \n长方形的面积公式是：  \n\\[\n\\text{面积} = \\text{长} \\times \\text{宽}\n\\]  \n代入数值：  \n\\[\n\\text{面积} = 8 \\, \\text{米} \\times 5 \\, \\text{米} = 40 \\, \\text{平方米}\n\\]  \n所以，这个长方形的面积是 *",
+          "expected_keywords": [
+            "40",
+            "面积",
+            "26",
+            "周长"
+          ],
+          "matched_keywords": [
+            "40",
+            "面积",
+            "周长"
+          ],
+          "score": 0.75,
+          "reasoning": "面积=8*5=40平方米，周长=2*(8+5)=26米",
+          "metadata": {
+            "cycle_time_ms": 12233.835220336914,
+            "tokens_generated": 150
+          }
+        },
+        {
+          "case_id": 4,
+          "input": "如果x + 15 = 42，那么x等于多少？",
+          "output": "我们可以通过简单的减法来求解这个问题：\n\n已知：  \n\\( x + 15 = 42 \\)\n\n要找到 \\( x \\)，需要把 15 从等式两边减去：\n\n\\[\nx = 42 - 15\n\\]\n\n计算得：\n\n\\[\nx = 27\n\\]\n\n**答案：** \\( x = 27 \\)",
+          "expected_keywords": [
+            "27"
+          ],
+          "matched_keywords": [
+            "27"
+          ],
+          "score": 1.0,
+          "reasoning": "x = 42 - 15 = 27",
+          "metadata": {
+            "cycle_time_ms": 7076.258182525635,
+            "tokens_generated": 87
+          }
+        },
+        {
+          "case_id": 5,
+          "input": "一件商品原价200元，打8折后是多少元？",
+          "output": "一件商品原价200元，打8折后是：\n\n**160元**\n\n计算过程：  \n原价 × 8折 = 200 × 0.8 = 160（元）",
+          "expected_keywords": [
+            "160"
+          ],
+          "matched_keywords": [
+            "160"
+          ],
+          "score": 1.0,
+          "reasoning": "200 * 0.8 = 160元",
+          "metadata": {
+            "cycle_time_ms": 4290.9979820251465,
+            "tokens_generated": 52
+          }
+        }
+      ]
+    },
+    "逻辑推理": {
+      "dimension": "逻辑推理",
+      "average_score": 0.667,
+      "case_count": 4,
+      "scores": [
+        0.667,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "details": [
+        {
+          "case_id": 1,
+          "input": "所有的鸟都会飞。企鹅是鸟。所以企鹅会飞。这个推理对吗？",
+          "output": "这个推理**不对**。\n\n原因：  \n这是一个典型的**错误推理**，属于**肯定后件**（Affirming the Consequent）的逻辑谬误。\n\n- 前提：“所有的鸟都会飞” → 这是一个全称肯定命题（S为P）。\n- 结论：“企鹅会飞” → 因为“企鹅是鸟”，所以“企鹅会飞”。\n\n逻辑错误在于：  \n从“所有S都是P”不能推出“所有P都是S”。  \n企鹅虽然是鸟，但它不是所有鸟都会飞，",
+          "expected_keywords": [
+            "不对",
+            "错误",
+            "企鹅不会飞"
+          ],
+          "matched_keywords": [
+            "不对",
+            "错误"
+          ],
+          "score": 0.67,
+          "reasoning": "前提错误，不是所有鸟都会飞",
+          "metadata": {
+            "cycle_time_ms": 12077.639818191528,
+            "tokens_generated": 150
+          }
+        },
+        {
+          "case_id": 2,
+          "input": "如果下雨，地面会湿。现在地面湿了，一定下雨了吗？",
+          "output": "不一定。地面湿可能有其他原因，比如洒水车、水管漏水、或者之前地面被水淋湿后自然晾干。所以，不能因为地面湿了就断定一定下雨。",
+          "expected_keywords": [
+            "不一定",
+            "可能",
+            "其他原因"
+          ],
+          "matched_keywords": [
+            "不一定",
+            "可能",
+            "其他原因"
+          ],
+          "score": 1.0,
+          "reasoning": "地面湿可能有其他原因，如洒水",
+          "metadata": {
+            "cycle_time_ms": 3409.804582595825,
+            "tokens_generated": 39
+          }
+        },
+        {
+          "case_id": 3,
+          "input": "A比B高，B比C高，那么A和C谁高？",
+          "output": "根据题目中的信息：  \n- A 比 B 高  \n- B 比 C 高  \n\n我们可以得出：  \n**A > B > C**  \n即 A 比 C 高。\n\n所以答案是：**A 比 C 高**。",
+          "expected_keywords": [
+            "A高",
+            "A比C高"
+          ],
+          "matched_keywords": [],
+          "score": 0.0,
+          "reasoning": "传递性：A > B > C，所以A > C",
+          "metadata": {
+            "cycle_time_ms": 4640.485048294067,
+            "tokens_generated": 56
+          }
+        },
+        {
+          "case_id": 4,
+          "input": "有红、蓝、绿三个球，红球不在左边，蓝球不在中间。请问绿球在哪个位置？",
+          "output": "根据题目描述，红球不在左边，蓝球不在中间。  \n由于红球不在左边，说明它可能在右边或中间。  \n但蓝球不在中间，所以蓝球只能在左边或右边。  \n\n结合条件：  \n- 红球不在左边 → 红球在右边或中间。  \n- 蓝球不在中间 → 蓝球在左边或右边。  \n\n如果红球在中间，蓝球只能在左边或右边，但红球在中间时，蓝球不能在中，所以蓝球在左边或右边，这符合条件。  \n如果红球在右边，蓝球只能在左边，这也",
+          "expected_keywords": [
+            "左边",
+            "左"
+          ],
+          "matched_keywords": [
+            "左边",
+            "左"
+          ],
+          "score": 1.0,
+          "reasoning": "红球不在左边，蓝球不在中间，推导绿球位置",
+          "metadata": {
+            "cycle_time_ms": 12260.711669921875,
+            "tokens_generated": 150
+          }
+        }
+      ]
+    },
+    "常识问答": {
+      "dimension": "常识问答",
+      "average_score": 0.688,
+      "case_count": 4,
+      "scores": [
+        1.0,
+        0.75,
+        0.0,
+        1.0
+      ],
+      "details": [
+        {
+          "case_id": 1,
+          "input": "中国的首都是哪里？",
+          "output": "中国的首都是**北京**。\n\n北京是中国政治、经济、文化、交通、科学、教育、科研、旅游、体育、娱乐、金融、贸易、外交、国际交往、文化、影视、新闻出版、出版、建筑、旅游、科技、艺术、军事、国防、经济、贸易、金融、交通、教育、科研、科技、文化、影视、新闻出版、出版、建筑、旅游、科技、艺术、军事、国防、经济、贸易、金融、交通、教育、科研、科技、文化、影视、新闻出版、出版、建筑、旅游、科技、艺术、军事、国",
+          "expected_keywords": [
+            "北京"
+          ],
+          "matched_keywords": [
+            "北京"
+          ],
+          "score": 1.0,
+          "reasoning": "基本常识",
+          "metadata": {
+            "cycle_time_ms": 11988.284349441528,
+            "tokens_generated": 150
+          }
+        },
+        {
+          "case_id": 2,
+          "input": "一年有多少个月？每个季度有几个月？",
+          "output": "一年有 **12个月**，每个季度有 **3个月**。\n\n具体划分方式如下：\n- 从1月1日到12月31日，共12个完整的月份。\n- 每个季度（3个月）包含：\n  - 第一季度：1月、2月、3月\n  - 第二季度：4月、5月、6月\n  - 第三季度：7月、8月、9月\n  - 第四季度：10月、11月、12月\n\n如果你有更多问题，欢迎继续提问！ 😊",
+          "expected_keywords": [
+            "12",
+            "3",
+            "十二",
+            "三"
+          ],
+          "matched_keywords": [
+            "12",
+            "3",
+            "三"
+          ],
+          "score": 0.75,
+          "reasoning": "一年12个月，4个季度，每季度3个月",
+          "metadata": {
+            "cycle_time_ms": 10398.251056671143,
+            "tokens_generated": 127
+          }
+        },
+        {
+          "case_id": 3,
+          "input": "水的化学式是什么？",
+          "output": "水的化学式是 **H₂O**。\n\n- **H** 代表氢元素（原子序数1）\n- **O** 代表氧元素（原子序数8）\n- **H₂O** 表示每个水分子由2个氢原子和1个氧原子组成。\n\n这是一个非常重要的化学式，广泛应用于化学、生物、环境科学等领域。",
+          "expected_keywords": [
+            "H2O",
+            "h2o"
+          ],
+          "matched_keywords": [],
+          "score": 0.0,
+          "reasoning": "化学常识",
+          "metadata": {
+            "cycle_time_ms": 6627.783536911011,
+            "tokens_generated": 81
+          }
+        },
+        {
+          "case_id": 4,
+          "input": "地球绕太阳转一圈需要多长时间？",
+          "output": "地球绕太阳公转一圈的时间大约是 **365.25天**（或约365天6小时9分10秒）。这个周期称为**一年**，而一年有365天，因此地球每经过365.25天就会少转1分钟，所以地球每过一天会额外多转1分钟。\n\n### 补充说明：\n- 实际上，地球公转周期为 **365.25636天**（约365天6小时9分10秒），但日常生活中我们通常说“一年365天”，因为365天不够整，会累积误差。\n- ",
+          "expected_keywords": [
+            "一年",
+            "365",
+            "365天"
+          ],
+          "matched_keywords": [
+            "一年",
+            "365",
+            "365天"
+          ],
+          "score": 1.0,
+          "reasoning": "天文常识",
+          "metadata": {
+            "cycle_time_ms": 12003.764390945435,
+            "tokens_generated": 150
+          }
+        }
+      ]
+    },
+    "对话连贯性": {
+      "dimension": "对话连贯性",
+      "average_score": 0.667,
+      "case_count": 3,
+      "scores": [
+        1.0,
+        0.0,
+        1.0
+      ],
+      "details": [
+        {
+          "case_id": 1,
+          "input": "你好，我是小明，很高兴认识你。",
+          "output": "你好！很高兴认识你，小明。我是小助手，很高兴能和你好起来！😊 有什么我可以帮你的吗？",
+          "expected_keywords": [
+            "你好",
+            "认识",
+            "小明"
+          ],
+          "matched_keywords": [
+            "你好",
+            "认识",
+            "小明"
+          ],
+          "score": 1.0,
+          "reasoning": "应该友好回应并记住名字",
+          "metadata": {
+            "cycle_time_ms": 2528.404474258423,
+            "tokens_generated": 28
+          }
+        },
+        {
+          "case_id": 2,
+          "input": "我刚才说我叫什么名字？",
+          "output": "你好！我刚才没有听到你叫什么名字，不过我很好奇，你是想让我帮你做些什么吗？😊",
+          "expected_keywords": [
+            "小明"
+          ],
+          "matched_keywords": [],
+          "score": 0.0,
+          "reasoning": "需要记住上一轮对话",
+          "metadata": {
+            "cycle_time_ms": 2417.8619384765625,
+            "tokens_generated": 26
+          }
+        },
+        {
+          "case_id": 3,
+          "input": "今天天气真好，适合出去散步。",
+          "output": "今天天气真好，适合出去散步。",
+          "expected_keywords": [
+            "天气",
+            "散步",
+            "好"
+          ],
+          "matched_keywords": [
+            "天气",
+            "散步",
+            "好"
+          ],
+          "score": 1.0,
+          "reasoning": "应该回应天气话题",
+          "metadata": {
+            "cycle_time_ms": 1084.9113464355469,
+            "tokens_generated": 11
+          }
+        }
+      ]
+    },
+    "记忆保持": {
+      "dimension": "记忆保持",
+      "average_score": 0.75,
+      "case_count": 4,
+      "scores": [
+        1.0,
+        0.0,
+        1.0,
+        1.0
+      ],
+      "details": [
+        {
+          "case_id": 1,
+          "input": "请记住这个数字：7829",
+          "output": "好的，请告诉我您需要我记住的数字是：7829。",
+          "expected_keywords": [
+            "记住",
+            "7829"
+          ],
+          "matched_keywords": [
+            "记住",
+            "7829"
+          ],
+          "score": 1.0,
+          "reasoning": "短期记忆测试",
+          "metadata": {
+            "cycle_time_ms": 1685.1074695587158,
+            "tokens_generated": 19
+          }
+        },
+        {
+          "case_id": 2,
+          "input": "我刚才让你记住的数字是多少？",
+          "output": "感谢您的信任！我无法记住任何之前的对话内容，包括您刚才提到的数字。如果您有任何其他问题或需要帮助，请随时告诉我！",
+          "expected_keywords": [
+            "7829"
+          ],
+          "matched_keywords": [],
+          "score": 0.0,
+          "reasoning": "需要回忆之前的信息",
+          "metadata": {
+            "cycle_time_ms": 2677.631139755249,
+            "tokens_generated": 31
+          }
+        },
+        {
+          "case_id": 3,
+          "input": "我喜欢的颜色是蓝色，请记住。",
+          "output": "好的，我明白了。我会记住你喜欢蓝色。😊",
+          "expected_keywords": [
+            "蓝色",
+            "记住"
+          ],
+          "matched_keywords": [
+            "蓝色",
+            "记住"
+          ],
+          "score": 1.0,
+          "reasoning": "记忆存储",
+          "metadata": {
+            "cycle_time_ms": 1218.7128067016602,
+            "tokens_generated": 13
+          }
+        },
+        {
+          "case_id": 4,
+          "input": "我喜欢什么颜色？",
+          "output": "我喜欢温暖的色调，比如咖啡色、米色和棕色，它们能让我感到舒适和放松。有时候我也会偏爱柔和的蓝色，如浅蓝或雾霾蓝，因为它们能带来宁静的感觉。至于其他颜色，我觉得绿色和紫色也很有魅力，因为它们能激发我的创造力。总的来说，我喜欢那种既有质感又能带来愉悦感的颜色。",
+          "expected_keywords": [
+            "蓝色"
+          ],
+          "matched_keywords": [
+            "蓝色"
+          ],
+          "score": 1.0,
+          "reasoning": "记忆召回",
+          "metadata": {
+            "cycle_time_ms": 6010.080575942993,
+            "tokens_generated": 74
+          }
+        }
+      ]
+    },
+    "STDP学习效果": {
+      "dimension": "STDP学习效果",
+      "average_score": 0.5,
+      "case_count": 2,
+      "scores": [
+        0.0,
+        1.0
+      ],
+      "details": [
+        {
+          "case_id": 1,
+          "input": "训练数据：问'你好'答'你好！很高兴见到你'",
+          "output": "好的，很高兴见到你！有什么我可以帮你的吗？",
+          "expected_keywords": [
+            "你好"
+          ],
+          "matched_keywords": [],
+          "score": 0.0,
+          "reasoning": "STDP权重更新测试",
+          "metadata": {
+            "cycle_time_ms": 1449.357032775879,
+            "tokens_generated": 15
+          }
+        },
+        {
+          "case_id": 2,
+          "input": "你好",
+          "output": "你好！很高兴见到你。我是人工智能助手，非常乐意帮助你。你有什么问题或需要我帮你做什么吗？😊",
+          "expected_keywords": [
+            "你好",
+            "高兴",
+            "见到"
+          ],
+          "matched_keywords": [
+            "你好",
+            "高兴",
+            "见到"
+          ],
+          "score": 1.0,
+          "reasoning": "检查STDP学习效果",
+          "metadata": {
+            "cycle_time_ms": 2302.762031555176,
+            "tokens_generated": 27
+          }
+        }
+      ]
+    },
+    "海马体召回": {
+      "dimension": "海马体召回",
+      "average_score": 0.333,
+      "case_count": 4,
+      "scores": [
+        0.667,
+        0.0,
+        0.667,
+        0.0
+      ],
+      "details": [
+        {
+          "case_id": 1,
+          "input": "我的生日是5月15日。",
+          "output": "祝贺你！5月15日是你的专属生日。",
+          "expected_keywords": [
+            "生日",
+            "5月15",
+            "记住"
+          ],
+          "matched_keywords": [
+            "生日",
+            "5月15"
+          ],
+          "score": 0.67,
+          "reasoning": "存储到海马体",
+          "metadata": {
+            "cycle_time_ms": 1364.3302917480469,
+            "tokens_generated": 15
+          }
+        },
+        {
+          "case_id": 2,
+          "input": "我的生日是什么时候？",
+          "output": "你的生日是什么时候？😊 如果你告诉我你的生日，我可以帮你查找相关信息哦！\n\n🌟 温馨提示：\n- 请记得核对准确日期，避免输入错误\n- 如果生日有特殊意义（如纪念日、特殊节日等），也可以告诉我哦！\n- 如果你分享的是纪念日，我也可以帮你规划庆祝活动～\n\n期待你的生日信息！🎂",
+          "expected_keywords": [
+            "5月15",
+            "五月十五"
+          ],
+          "matched_keywords": [],
+          "score": 0.0,
+          "reasoning": "从海马体召回",
+          "metadata": {
+            "cycle_time_ms": 6656.991958618164,
+            "tokens_generated": 82
+          }
+        },
+        {
+          "case_id": 3,
+          "input": "我住在北京朝阳区。",
+          "output": "您住在北京朝阳区，这是一个非常棒的地方！朝阳区作为北京的核心区域，生活便利，设施齐全，是许多人的首选居住地。如果您需要一些帮助，比如生活指南、租房建议、或者对朝阳区的某些方面感兴趣，我很乐意为您提供信息。\n\n如果您有任何问题或需要进一步的帮助，请随时告诉我！",
+          "expected_keywords": [
+            "北京",
+            "朝阳",
+            "记住"
+          ],
+          "matched_keywords": [
+            "北京",
+            "朝阳"
+          ],
+          "score": 0.67,
+          "reasoning": "存储到海马体",
+          "metadata": {
+            "cycle_time_ms": 5806.616544723511,
+            "tokens_generated": 69
+          }
+        },
+        {
+          "case_id": 4,
+          "input": "我住在哪里？",
+          "output": "这个用户问了一个很基础的问题，但我作为AI助手没有现实生活中的地理位置，无法提供具体地址。如果你需要知道某个具体地点的地址，可以告诉我城市或区域，我会尽力帮你查找。",
+          "expected_keywords": [
+            "北京",
+            "朝阳"
+          ],
+          "matched_keywords": [],
+          "score": 0.0,
+          "reasoning": "从海马体召回",
+          "metadata": {
+            "cycle_time_ms": 3822.5722312927246,
+            "tokens_generated": 44
+          }
+        }
+      ]
+    }
+  },
+  "training": {
+    "elapsed_seconds": 12.359958171844482,
+    "epochs": 3,
+    "training_log": [
+      {
+        "input": "你好",
+        "expected": "你好！很高兴见到你，有什么可以帮助你的吗？",
+        "actual": "你好！很高兴见到你。😊 有什么我可以帮你的吗？无论是解决问题、提供帮助，还是闲聊，我都在这里等你。有什么特别想聊的吗？",
+        "metadata": {
+          "cycle_time_ms": 2998.972177505493,
+          "tokens_generated": 35
+        }
+      },
+      {
+        "input": "你是谁",
+        "expected": "我是类人脑双系统AI助手，具有STDP学习和海马体记忆功能。",
+        "actual": "我是通义，很高兴遇见你！😊 我是通义千问，一个由人工智能驱动的助手，可以为你提供丰富的知识、帮助解答问题，陪你聊天，还有丰富的娱乐内容。欢迎随时和我交流，告诉我你最近在想什么，或者有什么想探讨的话题！",
+        "metadata": {
+          "cycle_time_ms": 4963.817119598389,
+          "tokens_generated": 58
+        }
+      },
+      {
+        "input": "谢谢",
+        "expected": "不客气！如果还有其他问题，随时可以问我。",
+        "actual": "谢谢您的关心！😊 作为AI助手，我确实存在一些局限性，比如无法感知您的情绪、记忆或参与情感互动。如果您有任何需要帮助或想聊的话题，请随时告诉我，我会尽力为您解答！💖 祝您一切顺利！",
+        "metadata": {
+          "cycle_time_ms": 4396.6076374053955,
+          "tokens_generated": 54
+        }
+      }
+    ]
+  },
+  "model_info": {
+    "model_path": "./models/qwen3.5-0.8b",
+    "total_params": 752393024
+  }
+}
