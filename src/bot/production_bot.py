@@ -204,12 +204,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     output = result.get("output", "")
     metadata = result.get("metadata", {})
     
-    # 发送响应
-    await update.message.reply_text(output)
+    # 发送响应 - 尝试Markdown格式，失败则用纯文本
+    try:
+        await update.message.reply_text(output, parse_mode='Markdown')
+    except Exception:
+        # Markdown解析失败，使用纯文本
+        await update.message.reply_text(output)
     
     # 发送元数据
     if metadata:
-        info = f"\n📊 周期: {metadata.get('cycle_id', 0)} | 耗时: {metadata.get('cycle_time_ms', 0):.1f}ms"
+        info = f"📊 周期: {metadata.get('cycle_id', 0)} | 耗时: {metadata.get('cycle_time_ms', 0):.1f}ms"
         await update.message.reply_text(info)
 
 
