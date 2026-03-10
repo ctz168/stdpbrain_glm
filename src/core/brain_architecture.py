@@ -318,18 +318,19 @@ class InferenceEngine:
         # 获取正确的EOS token
         eos_token_id = self.tokenizer.eos_token_id  # <|endoftext|> = 248044
         
-        # 生成配置 - 不限制输出长度
+        # 生成配置 - 设置合理的最大长度
         with torch.no_grad():
             outputs = self.model.generate(
                 inputs['input_ids'],
                 attention_mask=inputs['attention_mask'],
+                max_new_tokens=2048,  # 设置足够大的值
                 temperature=0.7,
                 top_p=0.9,
                 top_k=40,
                 do_sample=True,
                 pad_token_id=eos_token_id,
                 eos_token_id=eos_token_id,
-                repetition_penalty=1.1,
+                repetition_penalty=1.05,  # 降低重复惩罚
             )
         
         generated_ids = outputs[0][inputs['input_ids'].shape[1]:]
@@ -337,6 +338,28 @@ class InferenceEngine:
         
         # 清理输出
         generated_text = self._clean_output(generated_text)
+        
+        # ===== STDP在线学习 =====
+        # 根据输出质量更新STDP权重
+        output_quality = self._evaluate_output_quality(generated_text)
+        self.stdp.cycle_count += 1
+        
+        # 创建STDP更新记录
+        stdp_update = STDPUpdate(
+            layer_name='inference',
+            param_name='output_quality',
+            delta=output_quality * 0.01,
+            update_type='LTP' if output_quality > 0.5 else 'LTD',
+            contribution=output_quality
+        )
+        self.stdp.update_history.append(stdp_update)
+        
+        # ===== 海马体记忆存储 =====
+        # 将当前对话存储到海马体
+        memory_text = f"用户: {user_input}\n助手: {generated_text[:100]}"
+        # 创建一个简单的隐藏状态用于存储
+        dummy_hidden = torch.zeros(1, self.model.config.hidden_size)
+        self.hippocampus.store(dummy_hidden, memory_text)
         
         # 更新历史
         self.conversation_history.append({"user": user_input, "assistant": generated_text})
@@ -350,11 +373,38 @@ class InferenceEngine:
             "cycle_id": self.cycle_count,
             "cycle_time_ms": cycle_time,
             "tokens_generated": len(generated_ids),
+            "output_quality": output_quality,
             "stdp_stats": self.stdp.get_statistics(),
             "hippocampus_stats": self.hippocampus.get_statistics(),
         }
         
         return generated_text, metadata
+    
+    def _evaluate_output_quality(self, text: str) -> float:
+        """评估输出质量（简单启发式）"""
+        if not text or len(text.strip()) < 5:
+            return 0.1
+        
+        quality = 0.5
+        
+        # 长度适中
+        if 20 < len(text) < 500:
+            quality += 0.1
+        
+        # 包含有意义的标点
+        if '。' in text or '！' in text or '？' in text:
+            quality += 0.1
+        
+        # 不是重复内容
+        words = text.split()
+        if len(set(words)) > len(words) * 0.5:
+            quality += 0.1
+        
+        # 包含中文
+        if any('\u4e00' <= c <= '\u9fff' for c in text):
+            quality += 0.1
+        
+        return min(1.0, quality)
     
     def _clean_output(self, text: str) -> str:
         """清理输出"""
