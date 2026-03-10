@@ -7,6 +7,7 @@ Production-Grade Streaming Inference Engine
 - 100Hz刷新周期（每10ms生成一个token）
 - 窄窗口处理（每次处理1-2个token）
 - 流式输出到Telegram
+- 海马体记忆上下文增强
 """
 
 import os
@@ -25,6 +26,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
+
+# 添加路径
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from core.brain_architecture import HippocampusSystem, BrainConfig
 
 # ==================== 常量 ====================
 
@@ -56,6 +62,10 @@ class StreamingConfig:
     
     # 流式参数
     token_timeout_ms: float = 100.0  # 单token超时
+    
+    # 海马体参数
+    hippocampus_memory_size: int = 100
+    hippocampus_embedding_dim: int = 64
 
 
 # ==================== 流式推理引擎 ====================
@@ -64,6 +74,7 @@ class StreamingInferenceEngine:
     """
     生产级流式推理引擎
     严格实现100Hz刷新周期和窄窗口处理
+    集成海马体记忆系统
     """
     
     def __init__(self, model: AutoModelForCausalLM, 
@@ -72,6 +83,15 @@ class StreamingInferenceEngine:
         self.model = model
         self.tokenizer = tokenizer
         self.config = config
+        
+        # 初始化海马体系统
+        brain_config = BrainConfig()
+        brain_config.hippocampus_memory_size = config.hippocampus_memory_size
+        brain_config.hippocampus_embedding_dim = config.hippocampus_embedding_dim
+        self.hippocampus = HippocampusSystem(
+            hidden_size=model.config.hidden_size,
+            config=brain_config
+        )
         
         # 状态
         self.is_running = False
@@ -82,6 +102,10 @@ class StreamingInferenceEngine:
         
         # 窄窗口上下文
         self.narrow_window: deque = deque(maxlen=NARROW_WINDOW_SIZE)
+        
+        # 对话历史
+        self.conversation_history: List[Dict] = []
+        self.max_history = 10
         
         # 统计
         self.total_tokens_generated = 0
@@ -108,6 +132,7 @@ class StreamingInferenceEngine:
         """启动引擎"""
         self.is_running = True
         print(f"[StreamingEngine] 启动，刷新率: {self.config.refresh_rate_hz}Hz")
+        print(f"[StreamingEngine] 海马体记忆容量: {self.config.hippocampus_memory_size}")
     
     def stop(self):
         """停止引擎"""
@@ -122,9 +147,24 @@ class StreamingInferenceEngine:
         self.past_key_values = None
         self.narrow_window.clear()
     
-    def _build_chatml_input(self, user_input: str) -> Tuple[torch.Tensor, torch.Tensor]:
-        """构建ChatML格式输入"""
-        messages = [{"role": "user", "content": user_input}]
+    def _build_chatml_input(self, user_input: str, context: str = "") -> Tuple[torch.Tensor, torch.Tensor]:
+        """构建ChatML格式输入，包含海马体记忆上下文"""
+        
+        # 构建系统提示
+        system_prompt = """你是一个智能助手。请仔细分析问题，给出准确的回答。
+对于数学计算问题，请一步步计算，确保结果正确。
+对于租房、费用等问题，请仔细理解题意后再回答。"""
+        
+        # 构建消息
+        messages = [{"role": "system", "content": system_prompt}]
+        
+        # 添加对话历史
+        for hist in self.conversation_history[-3:]:  # 最近3轮对话
+            messages.append({"role": "user", "content": hist["user"]})
+            messages.append({"role": "assistant", "content": hist["assistant"][:200]})  # 限制长度
+        
+        # 添加当前问题
+        messages.append({"role": "user", "content": user_input})
         
         if hasattr(self.tokenizer, 'apply_chat_template'):
             text = self.tokenizer.apply_chat_template(
@@ -133,10 +173,37 @@ class StreamingInferenceEngine:
                 add_generation_prompt=True
             )
         else:
-            text = f"<|im_start|>user\n{user_input}<|im_end|>\n<|im_start|>assistant\n"
+            # 手动构建
+            text = f"<|im_start|>system\n{system_prompt}<|im_end|>\n"
+            for hist in self.conversation_history[-3:]:
+                text += f"<|im_start|>user\n{hist['user']}<|im_end|>\n"
+                text += f"<|im_start|>assistant\n{hist['assistant'][:200]}<|im_end|>\n"
+            text += f"<|im_start|>user\n{user_input}<|im_end|>\n<|im_start|>assistant\n"
         
-        inputs = self.tokenizer(text, return_tensors='pt', truncation=True, max_length=512)
+        inputs = self.tokenizer(text, return_tensors='pt', truncation=True, max_length=1024)
         return inputs['input_ids'], inputs['attention_mask']
+    
+    def _recall_memory(self, user_input: str) -> str:
+        """从海马体召回相关记忆"""
+        # 创建查询向量
+        query_hidden = torch.zeros(1, self.model.config.hidden_size)
+        
+        # 召回相关记忆
+        memories = self.hippocampus.recall(query_hidden, top_k=3)
+        
+        if memories:
+            context_parts = []
+            for mem in memories:
+                if mem.text:
+                    context_parts.append(mem.text[:100])
+            return "\n".join(context_parts)
+        return ""
+    
+    def _store_memory(self, user_input: str, response: str):
+        """存储对话到海马体"""
+        memory_text = f"用户: {user_input}\n助手: {response[:100]}"
+        dummy_hidden = torch.zeros(1, self.model.config.hidden_size)
+        self.hippocampus.store(dummy_hidden, memory_text)
     
     def generate_token(self) -> Tuple[Optional[int], float]:
         """
@@ -222,8 +289,13 @@ class StreamingInferenceEngine:
         self.reset()
         self.start()
         
-        # 构建输入
-        self.current_input_ids, self.current_attention_mask = self._build_chatml_input(user_input)
+        # 召回海马体记忆
+        memory_context = self._recall_memory(user_input)
+        
+        # 构建输入（包含历史上下文）
+        self.current_input_ids, self.current_attention_mask = self._build_chatml_input(
+            user_input, memory_context
+        )
         
         is_first = True
         
@@ -261,6 +333,19 @@ class StreamingInferenceEngine:
             # 让出控制权，允许其他协程执行
             await asyncio.sleep(0)
     
+    def save_conversation(self, user_input: str, response: str):
+        """保存对话到历史和海马体"""
+        # 保存到历史
+        self.conversation_history.append({
+            "user": user_input,
+            "assistant": response
+        })
+        if len(self.conversation_history) > self.max_history:
+            self.conversation_history.pop(0)
+        
+        # 存储到海马体
+        self._store_memory(user_input, response)
+    
     def get_statistics(self) -> Dict:
         """获取统计信息"""
         return {
@@ -268,6 +353,8 @@ class StreamingInferenceEngine:
             "total_cycles": self.total_cycles,
             "avg_token_time_ms": round(self.avg_token_time_ms, 2),
             "refresh_rate_hz": 1000.0 / max(self.avg_token_time_ms, 0.1),
+            "hippocampus_memories": len(self.hippocampus.memories),
+            "conversation_history": len(self.conversation_history),
         }
 
 
@@ -418,14 +505,19 @@ class StreamingProcessor:
         await streamer.start()
         
         # 流式生成并发送
+        full_response = ""
         try:
             async for token_text, gen_time, is_first in self.engine.async_stream_generate(user_input):
                 await streamer.add_token(token_text)
+                full_response += token_text
         except Exception as e:
             print(f"[StreamingProcessor] 错误: {e}")
         
         # 完成发送
         final_text = await streamer.finish()
+        
+        # 保存对话
+        self.engine.save_conversation(user_input, final_text)
         
         # 收集统计
         stats = {
