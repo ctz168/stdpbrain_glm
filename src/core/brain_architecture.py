@@ -287,8 +287,7 @@ class InferenceEngine:
         self.is_running = False
     
     def _build_context(self, user_input: str) -> str:
-        """构建上下文 - 简化版本，避免模型幻觉"""
-        # 只使用当前输入，不使用历史上下文（避免幻觉）
+        """构建上下文 - 简洁格式"""
         return f"用户: {user_input}\n助手:"
     
     def infer(self, user_input: str) -> Tuple[str, Dict]:
@@ -307,15 +306,15 @@ class InferenceEngine:
             outputs = self.model.generate(
                 inputs['input_ids'],
                 attention_mask=inputs['attention_mask'],
-                max_new_tokens=64,  # 减少到64，避免幻觉
-                temperature=0.8,
+                max_new_tokens=100,  # 增加到100
+                temperature=0.7,
                 top_p=0.9,
                 top_k=50,
                 do_sample=True,
                 pad_token_id=self.tokenizer.eos_token_id,
                 eos_token_id=self.tokenizer.eos_token_id,
-                repetition_penalty=1.5,  # 增加重复惩罚
-                no_repeat_ngram_size=2,  # 更严格的ngram限制
+                repetition_penalty=1.2,
+                no_repeat_ngram_size=3,
             )
         
         generated_ids = outputs[0][inputs['input_ids'].shape[1]:]
@@ -346,6 +345,14 @@ class InferenceEngine:
         """清理输出，移除所有多余内容"""
         import re
         
+        # 移除思考符号
+        text = text.replace('💭', '')
+        text = text.replace('🤔', '')
+        
+        # 移除引号
+        text = text.replace('"', '').replace('"', '').replace('"', '')
+        text = text.replace(''', '').replace(''', '').replace("'", '')
+        
         # 移除编号 (1):、(2):、1.:、2.: 等
         text = re.sub(r'\(\d+\)\s*:?\s*', '', text)
         text = re.sub(r'\d+\.\s*:?\s*', '', text)
@@ -364,22 +371,29 @@ class InferenceEngine:
             line = line.strip()
             if not line:
                 continue
+            # 跳过思考行
+            if line.startswith('💭') or line.startswith('🤔'):
+                continue
             # 遇到新的用户输入就停止
             if line.lower().startswith("user") or line.startswith("用户"):
                 break
-            # 只保留第一个回复段落
             result_lines.append(line)
-            if len(result_lines) >= 1:  # 只保留第一行
+            # 只保留前2行
+            if len(result_lines) >= 2:
                 break
         
-        result = result_lines[0] if result_lines else ""
+        result = '\n'.join(result_lines) if result_lines else ""
         
         # 清理多余空格
         result = ' '.join(result.split())
         
+        # 如果结果为空或太短，返回默认回复
+        if len(result.strip()) < 2:
+            result = "抱歉，我没有理解您的问题，请再说一次。"
+        
         # 如果输出太长，截断
-        if len(result) > 200:
-            result = result[:200]
+        if len(result) > 300:
+            result = result[:300]
         
         return result.strip()
     
