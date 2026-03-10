@@ -323,7 +323,7 @@ class InferenceEngine:
             outputs = self.model.generate(
                 inputs['input_ids'],
                 attention_mask=inputs['attention_mask'],
-                max_new_tokens=100,
+                max_new_tokens=512,  # 增加到512
                 temperature=0.7,
                 top_p=0.9,
                 top_k=40,
