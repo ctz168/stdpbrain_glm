@@ -301,26 +301,48 @@ class InferenceEngine:
         context = self._build_context(user_input)
         inputs = self.tokenizer(context, return_tensors='pt', truncation=True, max_length=512)
         
-        # 优化的生成配置 - 添加重复惩罚和停止条件
+        # 定义停止词 - 遇到这些就停止生成
+        stop_words = ["用户:", "user:", "User:", "\n用户", "\nuser"]
+        
+        # 获取停止词的token id
+        stop_token_ids = []
+        for word in stop_words:
+            tokens = self.tokenizer.encode(word, add_special_tokens=False)
+            stop_token_ids.extend(tokens)
+        stop_token_ids = list(set(stop_token_ids))
+        
+        # 添加eos_token到停止词
+        if self.tokenizer.eos_token_id not in stop_token_ids:
+            stop_token_ids.append(self.tokenizer.eos_token_id)
+        
+        # 生成配置
         with torch.no_grad():
             outputs = self.model.generate(
                 inputs['input_ids'],
                 attention_mask=inputs['attention_mask'],
-                max_new_tokens=100,  # 增加到100
+                max_new_tokens=80,
                 temperature=0.7,
                 top_p=0.9,
-                top_k=50,
+                top_k=40,
                 do_sample=True,
                 pad_token_id=self.tokenizer.eos_token_id,
                 eos_token_id=self.tokenizer.eos_token_id,
                 repetition_penalty=1.2,
                 no_repeat_ngram_size=3,
+                # 关键：使用bad_words_ids来阻止生成用户标记
+                bad_words_ids=[[t] for t in self.tokenizer.encode("用户:", add_special_tokens=False)] +
+                              [[t] for t in self.tokenizer.encode("user:", add_special_tokens=False)],
             )
         
         generated_ids = outputs[0][inputs['input_ids'].shape[1]:]
         generated_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
         
-        # 清理重复内容
+        # 在遇到"用户"时截断
+        for stop_word in ["用户:", "user:", "User:"]:
+            if stop_word in generated_text:
+                generated_text = generated_text.split(stop_word)[0]
+        
+        # 清理
         generated_text = self._clean_output(generated_text)
         
         # 更新历史
@@ -342,58 +364,44 @@ class InferenceEngine:
         return generated_text, metadata
     
     def _clean_output(self, text: str) -> str:
-        """清理输出，移除所有多余内容"""
+        """清理输出，只保留第一个完整句子"""
         import re
         
         # 移除思考符号
-        text = text.replace('💭', '')
-        text = text.replace('🤔', '')
+        text = text.replace('💭', '').replace('🤔', '')
         
         # 移除引号
         text = text.replace('"', '').replace('"', '').replace('"', '')
         text = text.replace(''', '').replace(''', '').replace("'", '')
         
-        # 移除编号 (1):、(2):、1.:、2.: 等
+        # 移除编号和角色标记
         text = re.sub(r'\(\d+\)\s*:?\s*', '', text)
         text = re.sub(r'\d+\.\s*:?\s*', '', text)
-        
-        # 移除角色标记
         text = re.sub(r'user\s*:', '', text, flags=re.IGNORECASE)
         text = re.sub(r'assistant\s*:', '', text, flags=re.IGNORECASE)
         text = re.sub(r'用户\s*:', '', text)
         text = re.sub(r'助手\s*:', '', text)
         
-        # 分行处理
-        lines = text.strip().split('\n')
-        result_lines = []
-        
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-            # 跳过思考行
-            if line.startswith('💭') or line.startswith('🤔'):
-                continue
-            # 遇到新的用户输入就停止
-            if line.lower().startswith("user") or line.startswith("用户"):
-                break
-            result_lines.append(line)
-            # 只保留前2行
-            if len(result_lines) >= 2:
-                break
-        
-        result = '\n'.join(result_lines) if result_lines else ""
-        
         # 清理多余空格
-        result = ' '.join(result.split())
+        text = ' '.join(text.split())
+        
+        # 只取第一个句子（以句号、问号、感叹号结尾）
+        sentences = re.split(r'[。！？.!?]', text)
+        if sentences:
+            result = sentences[0].strip()
+            # 如果第一句太短，可能是不完整的，取前两句
+            if len(result) < 10 and len(sentences) > 1:
+                result = sentences[0].strip() + '。' + sentences[1].strip()
+        else:
+            result = text
+        
+        # 限制长度
+        if len(result) > 150:
+            result = result[:150]
         
         # 如果结果为空或太短，返回默认回复
         if len(result.strip()) < 2:
-            result = "抱歉，我没有理解您的问题，请再说一次。"
-        
-        # 如果输出太长，截断
-        if len(result) > 300:
-            result = result[:300]
+            result = "抱歉，我没有理解您的问题。"
         
         return result.strip()
     
