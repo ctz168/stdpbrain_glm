@@ -107,6 +107,7 @@ class STDPSystem:
         self.update_history: List[STDPUpdate] = []
         self.dynamic_params: Dict[str, nn.Parameter] = {}
         self.static_params: Dict[str, nn.Parameter] = {}
+        self.cycle_count = 0  # 添加周期计数
         self._split_weights()
         
     def _split_weights(self):
