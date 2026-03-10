@@ -343,31 +343,45 @@ class InferenceEngine:
         return generated_text, metadata
     
     def _clean_output(self, text: str) -> str:
-        """清理输出，移除重复和多余内容"""
-        # 只取第一行作为回复（避免模型编造后续对话）
-        lines = text.strip().split('\n')
+        """清理输出，移除所有多余内容"""
+        import re
         
-        # 找到第一个完整回复
+        # 移除编号 (1):、(2):、1.:、2.: 等
+        text = re.sub(r'\(\d+\)\s*:?\s*', '', text)
+        text = re.sub(r'\d+\.\s*:?\s*', '', text)
+        
+        # 移除角色标记
+        text = re.sub(r'user\s*:', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'assistant\s*:', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'用户\s*:', '', text)
+        text = re.sub(r'助手\s*:', '', text)
+        
+        # 分行处理
+        lines = text.strip().split('\n')
         result_lines = []
+        
         for line in lines:
             line = line.strip()
             if not line:
                 continue
             # 遇到新的用户输入就停止
-            if line.startswith("用户:") or line.startswith("user:"):
+            if line.lower().startswith("user") or line.startswith("用户"):
                 break
-            result_lines.append(line)
             # 只保留第一个回复段落
-            if len(result_lines) >= 3:  # 最多3行
+            result_lines.append(line)
+            if len(result_lines) >= 1:  # 只保留第一行
                 break
         
-        result = '\n'.join(result_lines)
+        result = result_lines[0] if result_lines else ""
+        
+        # 清理多余空格
+        result = ' '.join(result.split())
         
         # 如果输出太长，截断
-        if len(result) > 500:
-            result = result[:500] + "..."
+        if len(result) > 200:
+            result = result[:200]
         
-        return result
+        return result.strip()
     
     def train_step(self, user_input: str, expected_output: str, optimizer) -> Tuple[float, Dict]:
         """执行一步训练"""
