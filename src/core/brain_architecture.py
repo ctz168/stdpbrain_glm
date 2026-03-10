@@ -318,12 +318,11 @@ class InferenceEngine:
         # 获取正确的EOS token
         eos_token_id = self.tokenizer.eos_token_id  # <|endoftext|> = 248044
         
-        # 生成配置 - 使用正确的停止token
+        # 生成配置 - 不限制输出长度
         with torch.no_grad():
             outputs = self.model.generate(
                 inputs['input_ids'],
                 attention_mask=inputs['attention_mask'],
-                max_new_tokens=512,  # 增加到512
                 temperature=0.7,
                 top_p=0.9,
                 top_k=40,
