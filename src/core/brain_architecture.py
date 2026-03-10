@@ -305,7 +305,7 @@ class InferenceEngine:
             return f"<|im_start|>user\n{user_input}<|im_end|>\n<|im_start|>assistant\n"
     
     def infer(self, user_input: str) -> Tuple[str, Dict]:
-        """执行推理"""
+        """执行推理 - 使用流式生成"""
         if not self.is_running:
             self.start()
         
@@ -317,35 +317,50 @@ class InferenceEngine:
         inputs = self.tokenizer(context, return_tensors='pt', truncation=True, max_length=512)
         
         # 获取正确的EOS token
-        eos_token_id = self.tokenizer.eos_token_id  # <|endoftext|> = 248044
+        eos_token_id = self.tokenizer.eos_token_id
         
-        # 生成配置 - 设置合理的最大长度
-        with torch.no_grad():
-            outputs = self.model.generate(
-                inputs['input_ids'],
-                attention_mask=inputs['attention_mask'],
-                max_new_tokens=2048,  # 设置足够大的值
-                temperature=0.7,
-                top_p=0.9,
-                top_k=40,
-                do_sample=True,
-                pad_token_id=eos_token_id,
-                eos_token_id=eos_token_id,
-                repetition_penalty=1.05,  # 降低重复惩罚
-            )
+        # 使用TextIteratorStreamer进行流式生成
+        from transformers import TextIteratorStreamer
+        import threading
         
-        generated_ids = outputs[0][inputs['input_ids'].shape[1]:]
-        generated_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+        streamer = TextIteratorStreamer(
+            self.tokenizer, 
+            skip_prompt=True, 
+            skip_special_tokens=True
+        )
+        
+        # 在后台线程中生成
+        generation_kwargs = dict(
+            inputs['input_ids'],
+            attention_mask=inputs['attention_mask'],
+            max_new_tokens=512,  # 合理的长度
+            temperature=0.7,
+            top_p=0.9,
+            top_k=40,
+            do_sample=True,
+            pad_token_id=eos_token_id,
+            eos_token_id=eos_token_id,
+            repetition_penalty=1.05,
+            streamer=streamer,
+        )
+        
+        thread = threading.Thread(target=self.model.generate, kwargs=generation_kwargs)
+        thread.start()
+        
+        # 收集流式输出
+        generated_text = ""
+        for text in streamer:
+            generated_text += text
+        
+        thread.join()
         
         # 清理输出
         generated_text = self._clean_output(generated_text)
         
         # ===== STDP在线学习 =====
-        # 根据输出质量更新STDP权重
         output_quality = self._evaluate_output_quality(generated_text)
         self.stdp.cycle_count += 1
         
-        # 创建STDP更新记录
         stdp_update = STDPUpdate(
             layer_name='inference',
             param_name='output_quality',
@@ -356,9 +371,7 @@ class InferenceEngine:
         self.stdp.update_history.append(stdp_update)
         
         # ===== 海马体记忆存储 =====
-        # 将当前对话存储到海马体
         memory_text = f"用户: {user_input}\n助手: {generated_text[:100]}"
-        # 创建一个简单的隐藏状态用于存储
         dummy_hidden = torch.zeros(1, self.model.config.hidden_size)
         self.hippocampus.store(dummy_hidden, memory_text)
         
@@ -373,7 +386,6 @@ class InferenceEngine:
         metadata = {
             "cycle_id": self.cycle_count,
             "cycle_time_ms": cycle_time,
-            "tokens_generated": len(generated_ids),
             "output_quality": output_quality,
             "stdp_stats": self.stdp.get_statistics(),
             "hippocampus_stats": self.hippocampus.get_statistics(),
